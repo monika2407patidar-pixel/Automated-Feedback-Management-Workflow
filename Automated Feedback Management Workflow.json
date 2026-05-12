@@ -1,0 +1,382 @@
+{
+  "name": "Automated Feedback Management Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Customer Feedback form",
+        "formDescription": "CFF",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Enter your Name ",
+              "placeholder": "Enter name"
+            },
+            {
+              "fieldLabel": "Contact info",
+              "fieldType": "number",
+              "placeholder": "Enter mobile number"
+            },
+            {
+              "fieldLabel": "Mail ID",
+              "fieldType": "email",
+              "placeholder": "Enter your Email"
+            },
+            {
+              "fieldLabel": "Feedback",
+              "placeholder": "Enter the feedback"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -256,
+        -256
+      ],
+      "id": "7a0cad77-dd65-44c7-9f8b-886d81f2b5c6",
+      "name": "Form",
+      "webhookId": "cf7cc145-cfab-489c-a2bc-ef079401ea16"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=check the feedback and tell me that the feedback is-\nComplaint{{ $json.Feedback }}\nCompliment{{ $json.Feedback }}\nFeature Request{{ $json.Feedback }}\n\nonly give the output if Complaint than Complaint and if Feature Request than Feature request if Compliment than Compliment",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -32,
+        -128
+      ],
+      "id": "eb430285-8793-4432-b0e0-b908b964987a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        96
+      ],
+      "id": "7d6a5dd3-e6cc-415a-b442-008aa3e3f028",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EpB5LIZ9sW2yCvdt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        320,
+        -256
+      ],
+      "id": "31d360d2-9748-45ac-a5d8-f8e5159c8e9a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "Compliment",
+                    "rightValue": "={{ $json.output }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f7d18efe-4306-49e6-8668-3e9637391cb7"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f437f5d4-0660-4180-88b1-a9b61c9b7f58",
+                    "leftValue": "Complaint",
+                    "rightValue": "={{ $json.output }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "883366d8-ab26-47d4-9af5-411c65633190",
+                    "leftValue": "Feature Request",
+                    "rightValue": "={{ $json.output }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        -256
+      ],
+      "id": "37e55f4d-a124-4b7f-abdb-b4828d820912",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app6D4OBbAy22dMUa",
+          "mode": "list",
+          "cachedResultName": "Practice",
+          "cachedResultUrl": "https://airtable.com/app6D4OBbAy22dMUa"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmuZjquksuLlJ90",
+          "mode": "list",
+          "cachedResultName": "Feature Request",
+          "cachedResultUrl": "https://airtable.com/app6D4OBbAy22dMUa/tblmuZjquksuLlJ90"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Feedback": "={{ $json.Feedback }}",
+            "Name": "={{ $json['Enter your Name '] }}",
+            "Email": "={{ $json['Mail ID'] }}",
+            "Contact info": "={{ $json['Contact info'] }}",
+            "Output": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "Feedback"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Contact info",
+              "displayName": "Contact info",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Output",
+              "displayName": "Output",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Attachments",
+              "displayName": "Attachments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Attachment Summary",
+              "displayName": "Attachment Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        -144
+      ],
+      "id": "75724915-9d8d-4025-a7c7-ebf8cc338f6e",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Gu9C2ZoIFytvIS8n",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Form": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [],
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "57914f2f-6710-427d-a725-2d18c246d665",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1791e4baad13430f1bdbddfdb1f13d4a37d25f27288ec8dfbc18ef5aba9990d7"
+  },
+  "id": "ZrTgyqnQF7X1RaDv",
+  "tags": []
+}
